@@ -284,6 +284,7 @@ public class Client {
         String algo;
 
         if (CP.contains("2")) {
+            chunksize = 1024;
             algo = "AES/ECB/PKCS5Padding";
         } else {
             chunksize = 117;
