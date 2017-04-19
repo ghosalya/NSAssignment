@@ -155,7 +155,7 @@ public class Client {
             long starttime = System.currentTimeMillis();
             boolean successful = CP(fileBytes, serverPublicKey, oout, preferredCP);
             long endtime = System.currentTimeMillis();
-            System.out.println("Estimated time taken: "+estimatedTime(endtime-starttime)+" ms");
+            System.out.println("Estimated time taken: "+estimatedTime(endtime-starttime));
             System.out.println("Estimated throughput: " + 1.0*sentfile.length()/(endtime-starttime) + " b/ms");
 //            System.out.println("transfer complete");
             return successful;
@@ -239,7 +239,6 @@ public class Client {
             Cipher rsaCipher = Cipher.getInstance("RSA");
             rsaCipher.init(Cipher.DECRYPT_MODE, serverPublicKey);
             decryptedByteArray = rsaCipher.doFinal(encryptedByteArray);
-            //System.out.println("decrypted byte array: " + new String(decryptedByteArray) + "\nrandom byte array: " + new String(randomByteArray));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Decrypting error - "+e.getMessage());
