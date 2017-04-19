@@ -1,8 +1,3 @@
-package com.example.kygrykhon.nsassignment_protocol;
-
-
-//import sun.misc.BASE64Encoder;
-import android.util.Base64;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;

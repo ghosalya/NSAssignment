@@ -1,4 +1,3 @@
-package com.example.kygrykhon.nsassignment_protocol;
 
 import java.io.File;
 import java.io.FileInputStream;

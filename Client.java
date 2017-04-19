@@ -1,9 +1,3 @@
-package com.example.kygrykhon.nsassignment_protocol;
-
-
-//import sun.misc.BASE64Encoder;
-
-import android.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -23,7 +17,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.CyclicBarrier;
-
 
 /**
  * Created by johsi on 14/4/2017.
