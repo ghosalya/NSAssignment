@@ -304,7 +304,9 @@ public class Client {
             while (k == chunksize) {
                 //int end = Math.min(fileBytes.length, start + chunksize);
 				k = fis.read(chunk,0,chunksize);
-                //chunk = Arrays.copyOfRange(fileBytes, start, end);
+				if(k<chunksize) {
+					chunk = Arrays.copyOfRange(chunk, 0, k);
+				}
                 //start += chunksize;
                 oout.writeObject(Crypto.encrypt(key, algo, chunk));
                 oout.flush();
