@@ -111,7 +111,7 @@ public class Client {
     public static boolean clientHandleTransfer(String ipaddress, File sentfile) //returns whether it is successful
     throws IOException, ClassNotFoundException {
         String currentdir = System.getProperty("user.dir")+"\\";
-        int portNum = 4;
+        int portNum = 43;
 
         System.out.println("Connecting...");
         Socket echoSocket = new Socket(ipaddress, portNum);

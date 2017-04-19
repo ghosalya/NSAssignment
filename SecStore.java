@@ -21,7 +21,7 @@ import java.util.Scanner;
 public class SecStore {
     private static String filePath = "C:\\NSProject\\";
     private static String currentdir;
-    private static int portNumber = 4;
+    private static int portNumber = 43;
 
     public static void main(String[] args) throws Exception {
         Scanner in = new Scanner(System.in);
@@ -162,6 +162,7 @@ public class SecStore {
             System.out.println("Estimated throughput(server): " + 1.0*success.length()/(endtime-starttime) + " b/ms");
             oout.close();
 			clientSocket.close();
+			serverSocket.close();
             return success != null;
         } catch(StreamCorruptedException e) {
             System.out.println("stream corrupted: " + e.getMessage());
