@@ -55,6 +55,11 @@ public class Client {
                     System.out.println("Invalid IP!!");
                 }
             }
+			
+			if(IPinput.equals("0.0.0.0")) {
+				System.out.println("Exiting");
+				break;
+			}
 
             String filename = "";
             File file = null;
@@ -156,7 +161,7 @@ public class Client {
             //boolean successful = CP(fileBytes, serverPublicKey, oout, preferredCP);
 			boolean successful = CP(sentfile, serverPublicKey, oout, preferredCP);
             long endtime = System.currentTimeMillis();
-            System.out.println("Estimated time taken: "+estimatedTime(endtime-starttime));
+            System.out.println("Estimated time taken: "+(endtime-starttime)+ " ms ("+estimatedTime(endtime-starttime)+")");
             System.out.println("Estimated throughput: " + 1.0*sentfile.length()/(endtime-starttime) + " b/ms");
 //            System.out.println("transfer complete");
             return successful;
@@ -303,9 +308,13 @@ public class Client {
                 //start += chunksize;
                 oout.writeObject(Crypto.encrypt(key, algo, chunk));
                 oout.flush();
+				System.out.print(".");
+				chunk = new byte[chunksize];
             }
         oout.writeObject("end of file byte transfer".getBytes());
         oout.flush();
+		fis.close();
+		return true;
         } catch (Exception e) {
             System.out.println("Error during file transfer: "+e.getMessage());
             e.printStackTrace();
@@ -314,7 +323,6 @@ public class Client {
 //            oout.flush(); } catch (Exception fe) {fe.printStackTrace();}
             return false;
         }
-        return true;
     }
 
     private static String estimatedTime(long millis) {

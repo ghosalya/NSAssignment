@@ -155,9 +155,14 @@ public class SecStore {
             }
 
             //oout.close(); //we dont need this at this point
-            boolean success = receiveFile(in, out, ois, serverprivKey, algo);
+            long starttime = System.currentTimeMillis();
+            File success = receiveFile(in, out, ois, serverprivKey, algo);
+            long endtime = System.currentTimeMillis();
+            System.out.println("Estimated time taken(server): "+(endtime-starttime)+ " ms ("+estimatedTime(endtime-starttime)+")");
+            System.out.println("Estimated throughput(server): " + 1.0*success.length()/(endtime-starttime) + " b/ms");
             oout.close();
-            return success;
+			clientSocket.close();
+            return success != null;
         } catch(StreamCorruptedException e) {
             System.out.println("stream corrupted: " + e.getMessage());
             e.printStackTrace();
@@ -165,7 +170,7 @@ public class SecStore {
         }
     }
 
-    private static boolean receiveFile(BufferedReader in, PrintWriter out, ObjectInputStream ois, Key serverprivKey, String algo)
+    private static File receiveFile(BufferedReader in, PrintWriter out, ObjectInputStream ois, Key serverprivKey, String algo)
     throws ClassNotFoundException, IOException,
         NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
         String filename;
@@ -177,13 +182,16 @@ public class SecStore {
             System.out.println("Name not received.");
             filename = "tempfile";
         }
+		
+		File outputFile = generateOutputFile(filename);
 
-        FileOutputStream fos = new FileOutputStream(generateOutputFile(filename));
+        FileOutputStream fos = new FileOutputStream(outputFile);
         System.out.println("Starts receiving file..");
         while(true) {
             // receives file in byte array format from client and writes bytes into destination file "received.txt"
 //            System.out.println("receiving encrypted file bytes");
             byte[] encryptedFileBytes = (byte[]) ois.readObject();
+				System.out.print(".");
             if (new String (encryptedFileBytes).equals("end of file byte transfer")) {
                 System.out.println("end of file byte transfer reached");
                 break;
@@ -201,7 +209,7 @@ public class SecStore {
 //        oout.close();
         ois.close();
         fos.close();
-        return true;
+        return outputFile;
     }
 
     private static File generateOutputFile(String filename) throws IOException{
@@ -233,6 +241,29 @@ public class SecStore {
         }
 
         return path.exists();
+    }
+	
+	
+    private static String estimatedTime(long millis) {
+        String timing = "";
+        long hours = (millis/(3600*1000)) ;
+        if(hours>0) {
+            timing += hours+" hrs ";
+        }
+
+        long minutes = (millis%(3600*1000)/(60*1000));
+        if(minutes>0) {
+            timing += minutes+" min ";
+        }
+
+        long seconds = (millis%(60*1000)/1000);
+        if(seconds>0) {
+            timing += seconds+" s ";
+        }
+
+        long remmil = millis%1000;
+        timing += remmil+" ms";
+        return timing;
     }
 
 }
