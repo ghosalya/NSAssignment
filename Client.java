@@ -126,13 +126,13 @@ public class Client {
         Key serverPublicKey = VerifyServer(in, ois, out, oout);
         if (serverPublicKey!=null) { // handshake for file upload
             System.out.println("handshake");
-            byte[] fileBytes;
-            try {
-                fileBytes = Crypto.fileToByteArr(sentfile);  // variable file object
-            } catch (Exception e) {
-                System.out.println("File to send error:"+e.getMessage());
-                return false;
-            } //error with file
+            //byte[] fileBytes;
+            //try {
+            //    fileBytes = Crypto.fileToByteArr(sentfile);  // variable file object
+            //} catch (Exception e) {
+            //    System.out.println("File to send error:"+e.getMessage());
+            //    return false;
+            //} //error with file
 
             System.out.println("requesting server's preferred CP");
             out.println("please state your preferred CP");
@@ -153,7 +153,8 @@ public class Client {
             // encrypts file in byte array format using server's public key
             System.out.println("sending encrypted file bytes");
             long starttime = System.currentTimeMillis();
-            boolean successful = CP(fileBytes, serverPublicKey, oout, preferredCP);
+            //boolean successful = CP(fileBytes, serverPublicKey, oout, preferredCP);
+			boolean successful = CP(sentfile, serverPublicKey, oout, preferredCP);
             long endtime = System.currentTimeMillis();
             System.out.println("Estimated time taken: "+estimatedTime(endtime-starttime));
             System.out.println("Estimated throughput: " + 1.0*sentfile.length()/(endtime-starttime) + " b/ms");
@@ -276,26 +277,29 @@ public class Client {
         }
     }
 
-    private static boolean CP (byte[] fileBytes, Key key, ObjectOutputStream oout, String CP) {
+    //private static boolean CP (byte[] fileBytes, Key key, ObjectOutputStream oout, String CP) {
+    private static boolean CP (File sentfile, Key key, ObjectOutputStream oout, String CP) throws FileNotFoundException{
         int chunksize;
-        byte[] chunk;
         int start = 0;
         String algo;
 
         if (CP.contains("2")) {
-            chunksize = 16;
             algo = "AES/ECB/PKCS5Padding";
         } else {
             chunksize = 117;
             algo = "RSA/ECB/PKCS1Padding";
         }
-
+		
+		int k = chunksize;
+		
+		BufferedInputStream fis = new BufferedInputStream(new FileInputStream(sentfile));
+		byte[] chunk = new byte[chunksize];
         try {
-            while (start < fileBytes.length) {
-                int end = Math.min(fileBytes.length, start + chunksize);
-                chunk = Arrays.copyOfRange(fileBytes, start, end);
-                start += chunksize;
-
+            while (k == chunksize) {
+                //int end = Math.min(fileBytes.length, start + chunksize);
+				k = fis.read(chunk,0,chunksize);
+                //chunk = Arrays.copyOfRange(fileBytes, start, end);
+                //start += chunksize;
                 oout.writeObject(Crypto.encrypt(key, algo, chunk));
                 oout.flush();
             }
