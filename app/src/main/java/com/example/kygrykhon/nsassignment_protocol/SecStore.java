@@ -24,7 +24,7 @@ import java.util.Scanner;
  */
 
 public class SecStore {
-    private static final String filePath = "C:\\NSProject\\";
+    private static String filePath = "C:\\NSProject\\";
     private static String currentdir;
     private static int portNumber = 4;
 
@@ -32,6 +32,11 @@ public class SecStore {
         Scanner in = new Scanner(System.in);
         System.out.println("NS Assignment - FileTransfer Client || a 50.005 Computer System Engineering project");
         System.out.println("        by Gede Ria Ghosalya & Keong Johsi");
+
+        if(!checkDownloadPath()){
+            System.out.println(filePath+" is not a valid path. Relocating to local directory");
+            filePath = System.getProperty("user.dir").toString() + File.separator + "NSProject" + File.separator;
+        }
 
         System.out.println("You IP Address is: "+ InetAddress.getLocalHost().toString());
 
@@ -110,7 +115,7 @@ public class SecStore {
             // server encrypts random message from client with server's private key
             System.out.println("encrypting random msg");
             byte[] encryptedByteArray = Crypto.encrypt(serverprivKey, "RSA", randomByteArray);
-            System.out.println("length of encrypted byte array: " + encryptedByteArray.length);
+//            System.out.println("length of encrypted byte array: " + encryptedByteArray.length);
 
             // server sends encrypted message back to client
             System.out.println("sending encrypted random msg bytes");
@@ -133,7 +138,7 @@ public class SecStore {
             System.out.println("question asking for server's preferred CP");
             in.readLine();
 
-            System.out.println("retrieving server's preferred CP");
+            System.out.print("Prefered CP [1,2]:");
             Scanner scanner = new Scanner(System.in);
             String preferredCP = scanner.next();
             out.println(preferredCP);
@@ -154,8 +159,9 @@ public class SecStore {
                 algo = "RSA/ECB/PKCS1Padding";
             }
 
-            oout.close(); //we dont need this at this point
-            boolean success = receiveFile(in, out, ois, serverprivKey, algo, "name");
+            //oout.close(); //we dont need this at this point
+            boolean success = receiveFile(in, out, ois, serverprivKey, algo);
+            oout.close();
             return success;
         } catch(StreamCorruptedException e) {
             System.out.println("stream corrupted: " + e.getMessage());
@@ -164,24 +170,34 @@ public class SecStore {
         }
     }
 
-    private static boolean receiveFile(BufferedReader in, PrintWriter out, ObjectInputStream ois, Key serverprivKey, String algo, String filename)
+    private static boolean receiveFile(BufferedReader in, PrintWriter out, ObjectInputStream ois, Key serverprivKey, String algo)
     throws ClassNotFoundException, IOException,
         NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
-        FileOutputStream fos = new FileOutputStream(generateOutputFile(filename));
+        String filename;
+        //fetching name
+        try{
+            filename = in.readLine();
+            out.println("Filename received");
+        } catch (IOException e) {
+            System.out.println("Name not received.");
+            filename = "tempfile";
+        }
 
+        FileOutputStream fos = new FileOutputStream(generateOutputFile(filename));
+        System.out.println("Starts receiving file..");
         while(true) {
             // receives file in byte array format from client and writes bytes into destination file "received.txt"
-            System.out.println("receiving encrypted file bytes");
+//            System.out.println("receiving encrypted file bytes");
             byte[] encryptedFileBytes = (byte[]) ois.readObject();
             if (new String (encryptedFileBytes).equals("end of file byte transfer")) {
                 System.out.println("end of file byte transfer reached");
                 break;
             }
 
-            System.out.println("decrypting file bytes");
+//            System.out.println("decrypting file bytes");
             byte[] decryptedFileBytes = Crypto.decrypt(serverprivKey, algo, encryptedFileBytes);
-
-            System.out.println("writing decrypted file bytes to file");
+//            System.out.println(new String(decryptedFileBytes));
+//            System.out.println("writing decrypted file bytes to file");
             fos.write(decryptedFileBytes);
         }
 
@@ -195,6 +211,7 @@ public class SecStore {
 
     private static File generateOutputFile(String filename) throws IOException{
         int count = 0;
+        String orifilename = filename;
         try {
             File file;
             while (true) {
@@ -203,7 +220,8 @@ public class SecStore {
                     file.createNewFile();
                     break;
                 } else {
-                    filename = filename + " ("+count+")";
+                    filename = " ("+count+")"+orifilename;
+                    count++;
                 }
             }
             return file;
@@ -211,6 +229,15 @@ public class SecStore {
             //shouldnt be the case
         }
         return null;
+    }
+
+    private static boolean checkDownloadPath() {
+        File path = new File(filePath);
+        if(!path.exists()) {
+            path.mkdir();
+        }
+
+        return path.exists();
     }
 
 }

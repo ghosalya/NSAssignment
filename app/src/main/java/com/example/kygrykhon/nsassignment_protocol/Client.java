@@ -98,7 +98,10 @@ public class Client {
             return false;
         } else {
             try {
-                return clientHandleTransfer(ipaddress, file);
+
+                boolean success = clientHandleTransfer(ipaddress, file);
+
+                return success;
             } catch (Exception e) {
                 System.out.println("wierd..");
                 e.printStackTrace();
@@ -146,17 +149,22 @@ public class Client {
             String preferredCP = in.readLine();
 
 
-            if (preferredCP.equals("2")) {  // generate and send AES key
+            if (preferredCP.contains("2")) {  // accepts "2" or "CP2"
                 //changes publickey to new AES key for encryption
                 serverPublicKey = CP2KeyGeneration(serverPublicKey, oout);
             }
 
+            //sending file name
+            out.println(sentfile.getName());
+
             // encrypts file in byte array format using server's public key
             System.out.println("sending encrypted file bytes");
-
+            long starttime = System.currentTimeMillis();
             boolean successful = CP(fileBytes, serverPublicKey, oout, preferredCP);
-
-            System.out.println("transfer complete");
+            long endtime = System.currentTimeMillis();
+            System.out.println("Estimated time taken: "+estimatedTime(endtime-starttime)+" ms");
+            System.out.println("Estimated throughput: " + 1.0*sentfile.length()/(endtime-starttime) + " b/ms");
+//            System.out.println("transfer complete");
             return successful;
 
         }
@@ -238,14 +246,14 @@ public class Client {
             Cipher rsaCipher = Cipher.getInstance("RSA");
             rsaCipher.init(Cipher.DECRYPT_MODE, serverPublicKey);
             decryptedByteArray = rsaCipher.doFinal(encryptedByteArray);
-            System.out.println("decrypted byte array: " + new String(decryptedByteArray) + "\nrandom byte array: " + new String(randomByteArray));
+            //System.out.println("decrypted byte array: " + new String(decryptedByteArray) + "\nrandom byte array: " + new String(randomByteArray));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Decrypting error - "+e.getMessage());
             return null;
         }
 
-        if(Arrays.equals(randomByteArray, decryptedByteArray)) {
+        if(!Arrays.equals(randomByteArray, decryptedByteArray)) {
             return null;
         } else {
             return serverPublicKey;
@@ -282,15 +290,12 @@ public class Client {
         int start = 0;
         String algo;
 
-
-        if (CP.equals("1")) {
-            chunksize = 117;
-            algo = "RSA/ECB/PKCS1Padding";
-
-        } else {
+        if (CP.contains("2")) {
             chunksize = 16;
             algo = "AES/ECB/PKCS5Padding";
-
+        } else {
+            chunksize = 117;
+            algo = "RSA/ECB/PKCS1Padding";
         }
 
         try {
@@ -306,12 +311,35 @@ public class Client {
         oout.flush();
         } catch (Exception e) {
             System.out.println("Error during file transfer: "+e.getMessage());
-            try{
-            oout.writeObject("end of file byte transfer".getBytes());
-            oout.flush(); } catch (Exception fe) {fe.printStackTrace();}
+            e.printStackTrace();
+//            try{
+//            oout.writeObject("end of file byte transfer".getBytes());
+//            oout.flush(); } catch (Exception fe) {fe.printStackTrace();}
             return false;
         }
         return true;
+    }
+
+    private static String estimatedTime(long millis) {
+        String timing = "";
+        long hours = (millis/(3600*1000)) ;
+        if(hours>0) {
+            timing += hours+" hrs ";
+        }
+
+        long minutes = (millis%(3600*1000)/(60*1000));
+        if(minutes>0) {
+            timing += minutes+" min ";
+        }
+
+        long seconds = (millis%(60*1000)/1000);
+        if(seconds>0) {
+            timing += seconds+" s ";
+        }
+
+        long remmil = millis%1000;
+        timing += remmil+" ms";
+        return timing;
     }
 
 }
