@@ -1,9 +1,9 @@
-NS Assignment || a 50.005 Computer System Engineering project
+NS Project: Secure File Transfer || 50.005 Computer System Engineering
 by Gede Ria Ghosalya (1001841) & Keong Jo Hsi (1001685)
+  
+1. How to run the programs
 
-1. How to use
-
-1a. Using java compiler
+1a. Using the java compiler
 
 First, compile Crypto.java on both sides.
 
@@ -18,7 +18,7 @@ The programs will show the etimated time taken & throughput before exiting.
 The server code saves the transferred file into C:/NSProject by default. If the directory does not exist, it will attempt to create one. If the attempt fails, the program will warn the user.
 
 
-1b. Using Windows Batch file
+1b. Using Windows batch file
 
 Compile Crypto.java on both sides.
 On Windows, simply run secstore1.bat or secstore2.bat (according to CP preference) and client.bat. When run in this manner, client.bat prompts the user for an IPAddress and Filename.
