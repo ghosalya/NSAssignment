@@ -1,0 +1,2 @@
+javac SecStoreCP1.java
+java SecStoreCP1

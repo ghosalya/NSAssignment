@@ -18,7 +18,7 @@ import java.util.Scanner;
  * Created by johsi on 14/4/2017.
  */
 
-public class SecStore {
+public class SecStoreCP1 {
     private static String filePath = "C:\\NSProject\\";
     private static String currentdir;
     private static int portNumber = 43;
@@ -41,13 +41,14 @@ public class SecStore {
         // creation of Server's private key from privateServer.der
         Key serverprivKey = getPrivateKey("RSA");
 
-        while (true) {
+        //while (true) {
             if(attemptServerVerification(serverprivKey, ServerCert)){
-                System.out.println("Transfer successful");
+                System.out.println("Transfer successful (press Enter)");
             } else {
-                System.out.println("Transfer failed");
+                System.out.println("Transfer failed (press Enter)");
             }
-        }
+        //}
+		in.nextLine();
 
 
     }
@@ -133,9 +134,10 @@ public class SecStore {
             System.out.println("question asking for server's preferred CP");
             in.readLine();
 
-            System.out.print("Prefered CP [1,2]:");
-            Scanner scanner = new Scanner(System.in);
-            String preferredCP = scanner.next();
+            //System.out.print("Prefered CP [1,2]:");
+            //Scanner scanner = new Scanner(System.in);
+            //String preferredCP = scanner.next();
+			String preferredCP = "1";
             out.println(preferredCP);
             out.flush();
 

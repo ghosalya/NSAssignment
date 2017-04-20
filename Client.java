@@ -45,7 +45,7 @@ public class Client {
     static void clientCLInterface() {
         Scanner in = new Scanner(System.in);
 
-        while (true) {
+        //while (true) {
             String IPinput = "";
             while (!checkValidIPAddress(IPinput)) {
                 System.out.println("Target IP Address:");
@@ -55,11 +55,6 @@ public class Client {
                     System.out.println("Invalid IP!!");
                 }
             }
-			
-			if(IPinput.equals("0.0.0.0")) {
-				System.out.println("Exiting");
-				break;
-			}
 
             String filename = "";
             File file = null;
@@ -77,11 +72,14 @@ public class Client {
 
             System.out.println("Transferring "+filename+" to "+IPinput);
             if(clientHandleFile(IPinput, file)) {
-                System.out.println("Transfer successful");
+                System.out.println("Transfer successful (press Enter)");
             } else {
-                System.out.println("Transfer failed");
+                System.out.println("Transfer failed (press Enter)");
             }
-        }
+		
+		
+		in.nextLine();
+        //}
         //System.out.println("Thank you for using our service!");
     }
 
@@ -164,6 +162,11 @@ public class Client {
             System.out.println("Estimated time taken: "+(endtime-starttime)+ " ms ("+estimatedTime(endtime-starttime)+")");
             System.out.println("Estimated throughput: " + 1.0*sentfile.length()/(endtime-starttime) + " b/ms");
 //            System.out.println("transfer complete");
+			echoSocket.close();
+            in.close();
+            ois.close();
+            out.close();
+            oout.close();
             return successful;
 
         }
