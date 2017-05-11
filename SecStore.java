@@ -18,31 +18,54 @@ import java.util.Scanner;
  * Created by johsi on 14/4/2017.
  */
 
-public class SecStoreCP2 {
+ // RECENT CHANGES :- make everything non-static
+ 
+ 
+public class SecStore {
     private static String filePath = "C:\\NSProject\\";
+	public static String certificatePath, privateKeyPath;
     private static String currentdir;
     private static int portNumber = 43;
+	private static X509Certificate ServerCert;
+	private static Key serverprivKey;
+	
+	public SecStore() throws Exception {
+		certificatePath = currentdir+"1001685.crt";
+		privateKeyPath = currentdir+"privateServer.der";
+		initiateServer();
+	}
+	
+	public SecStore(String certPath, String privKeyPath) throws Exception{
+		certificatePath = certPath;
+		privateKeyPath = privKeyPath;
+		initiateServer();
+	}
 
     public static void main(String[] args) throws Exception {
         Scanner in = new Scanner(System.in);
         System.out.println("NS Assignment - FileTransfer Client || a 50.005 Computer System Engineering project");
         System.out.println("        by Gede Ria Ghosalya & Keong Johsi");
+		
+		
+        currentdir = System.getProperty("user.dir")+"\\";
+		
+		SecStore serv = new SecStore();
 
-        if(!checkDownloadPath()){
-            System.out.println(filePath+" is not a valid path. Relocating to local directory");
-            filePath = System.getProperty("user.dir").toString() + File.separator + "NSProject" + File.separator;
-        }
+        //if(!checkDownloadPath()){
+        //    System.out.println(filePath+" is not a valid path. Relocating to local directory");
+        //    filePath = System.getProperty("user.dir").toString() + File.separator + "NSProject" + File.separator;
+        //}
 
         System.out.println("You IP Address is: "+ InetAddress.getLocalHost().toString());
 
         // creation of X509Certificate object from 1001685.crt
-        X509Certificate ServerCert = getServerCert();
+        //X509Certificate ServerCert = getServerCert(certificatePath);
 
         // creation of Server's private key from privateServer.der
-        Key serverprivKey = getPrivateKey("RSA");
-
+        //Key serverprivKey = getPrivateKey(privateKeyPath, "RSA");
+		
         //while (true) {
-            if(attemptServerVerification(serverprivKey, ServerCert)){
+            if(serv.attemptServerVerification(serverprivKey, ServerCert)){
                 System.out.println("Transfer successful (press Enter)");
             } else {
                 System.out.println("Transfer failed (press Enter)");
@@ -52,25 +75,40 @@ public class SecStoreCP2 {
 
 
     }
+	
+	public void initiateServer() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, CertificateException {
+		if(!checkDownloadPath()){
+            System.out.println(filePath+" is not a valid path. Relocating to local directory");
+            filePath = System.getProperty("user.dir").toString() + File.separator + "NSProject" + File.separator;
+        }
+
+        //System.out.println("You IP Address is: "+ InetAddress.getLocalHost().toString());
+
+        // creation of X509Certificate object from 1001685.crt
+        X509Certificate ServerCert = getServerCert(certificatePath);
+
+        // creation of Server's private key from privateServer.der
+        Key serverprivKey = getPrivateKey(privateKeyPath, "RSA");
+	}
 
     private static boolean checkPathExists(String path) {
         File file = new File(path);
         return (file.exists() && file.isDirectory());
     }
 
-    private static X509Certificate getServerCert()
+    private static X509Certificate getServerCert(String certPath)
     throws  FileNotFoundException, CertificateException, IOException{
-        currentdir = System.getProperty("user.dir")+"\\";
-        InputStream ServerCertFileInputStream = new FileInputStream(currentdir+"1001685.crt");
+        //currentdir = System.getProperty("user.dir")+"\\";
+        InputStream ServerCertFileInputStream = new FileInputStream(certPath);
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate ServerCert = (X509Certificate)cf.generateCertificate(ServerCertFileInputStream);
         ServerCertFileInputStream.close();
         return ServerCert;
     }
 
-    private static PrivateKey getPrivateKey(String algorithm)
+    private static PrivateKey getPrivateKey(String privateKeyPath, String algorithm)
     throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
-        File keyFile = new File(currentdir+"privateServer.der");
+        File keyFile = new File(privateKeyPath);
         byte[] privKeyByteArray = new byte[(int)keyFile.length()];
         FileInputStream fis = new FileInputStream(keyFile);
         fis.read(privKeyByteArray); //read file into bytes[]
@@ -80,8 +118,32 @@ public class SecStoreCP2 {
         PrivateKey serverprivKey = keyFactory.generatePrivate(keySpec);
         return serverprivKey;
     }
+	
+	public boolean attemptServerVerification() 
+	throws IOException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, BadPaddingException, CertificateEncodingException{
+				System.out.println("Starting server - attempting verification..");
+				return attemptServerVerification(serverprivKey, ServerCert, "1", filePath);
+	}
+	
+	public boolean attemptServerVerification(String preferredCP, String downloadPath) 
+	throws IOException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, BadPaddingException, CertificateEncodingException{
+				return attemptServerVerification(serverprivKey, ServerCert, preferredCP, downloadPath);
+	}
 
-    private static boolean attemptServerVerification(Key serverprivKey, X509Certificate ServerCert)
+	private boolean attemptServerVerification(Key serverprivKey, X509Certificate ServerCert)
+    throws IOException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, BadPaddingException, CertificateEncodingException {
+				
+				//Overloading: if no preferredCP given, ask				
+				System.out.print("Prefered CP [1,2]:");
+				Scanner scanner = new Scanner(System.in);
+				String preferredCP = scanner.next();
+				return attemptServerVerification(serverprivKey, ServerCert, preferredCP, filePath);
+			}
+	
+    private boolean attemptServerVerification(Key serverprivKey, X509Certificate ServerCert, String preferredCP, String downloadPath)
     throws IOException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
             InvalidKeyException, BadPaddingException, CertificateEncodingException {
         String algo;
@@ -133,11 +195,11 @@ public class SecStoreCP2 {
 
             System.out.println("question asking for server's preferred CP");
             in.readLine();
-
+			
             //System.out.print("Prefered CP [1,2]:");
             //Scanner scanner = new Scanner(System.in);
             //String preferredCP = scanner.next();
-			String preferredCP = "2";
+			if(preferredCP!="2") preferredCP="1";
             out.println(preferredCP);
             out.flush();
 
@@ -158,7 +220,7 @@ public class SecStoreCP2 {
 
             //oout.close(); //we dont need this at this point
             long starttime = System.currentTimeMillis();
-            File success = receiveFile(in, out, ois, serverprivKey, algo);
+            File success = receiveFile(in, out, ois, serverprivKey, algo, downloadPath);
             long endtime = System.currentTimeMillis();
             System.out.println("Estimated time taken(server): "+(endtime-starttime)+ " ms ("+estimatedTime(endtime-starttime)+")");
             System.out.println("Estimated throughput(server): " + 1.0*success.length()/(endtime-starttime) + " b/ms");
@@ -173,9 +235,9 @@ public class SecStoreCP2 {
         }
     }
 
-    private static File receiveFile(BufferedReader in, PrintWriter out, ObjectInputStream ois, Key serverprivKey, String algo)
+    private File receiveFile(BufferedReader in, PrintWriter out, ObjectInputStream ois, Key serverprivKey, String algo, String downloadPath)
     throws ClassNotFoundException, IOException,
-        NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, EOFException{
+        NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
         String filename;
         //fetching name
         try{
@@ -186,7 +248,7 @@ public class SecStoreCP2 {
             filename = "tempfile";
         }
 		
-		File outputFile = generateOutputFile(filename);
+		File outputFile = generateOutputFile(downloadPath, filename);
 
         FileOutputStream fos = new FileOutputStream(outputFile);
         System.out.println("Starts receiving file..");
@@ -194,32 +256,37 @@ public class SecStoreCP2 {
             // receives file in byte array format from client and writes bytes into destination file "received.txt"
 //            System.out.println("receiving encrypted file bytes");
             byte[] encryptedFileBytes = (byte[]) ois.readObject();
-				System.out.print(".");
+			System.out.print(".");
             if (new String (encryptedFileBytes).equals("end of file byte transfer")) {
                 System.out.println("end of file byte transfer reached");
                 break;
             }
+
 //            System.out.println("decrypting file bytes");
             byte[] decryptedFileBytes = Crypto.decrypt(serverprivKey, algo, encryptedFileBytes);
 //            System.out.println(new String(decryptedFileBytes));
 //            System.out.println("writing decrypted file bytes to file");
             fos.write(decryptedFileBytes);
+        }
+		
+		out.print("File received successfully.");
+		out.flush();
 
-        in.close();
-        out.close();
+        //in.close();
+        //out.close();
 //        oout.close();
-        ois.close();
-        fos.close();
+        //ois.close();
+        //fos.close();
         return outputFile;
     }
 
-    private static File generateOutputFile(String filename) throws IOException{
+    private static File generateOutputFile(String downloadPath, String filename) throws IOException{
         int count = 0;
         String orifilename = filename;
         try {
             File file;
             while (true) {
-                file = new File(filePath + filename);
+                file = new File(downloadPath + filename);
                 if (!file.exists()) {
                     file.createNewFile();
                     break;
@@ -235,7 +302,7 @@ public class SecStoreCP2 {
         return null;
     }
 
-    private static boolean checkDownloadPath() {
+    private boolean checkDownloadPath() {
         File path = new File(filePath);
         if(!path.exists()) {
             path.mkdir();

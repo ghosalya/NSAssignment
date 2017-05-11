@@ -83,7 +83,7 @@ public class Client {
         //System.out.println("Thank you for using our service!");
     }
 
-    static boolean checkValidIPAddress (String ipaddress) {
+    public static boolean checkValidIPAddress (String ipaddress) {
         //check if ipaddress is a legitimate string for IP Addresses
         return ipaddress.matches("\\d+\\.\\d+\\.\\d+\\.\\d+");
     }
@@ -152,6 +152,7 @@ public class Client {
 
             //sending file name
             out.println(sentfile.getName());
+			String filenameReceived = in.readLine();
 
             // encrypts file in byte array format using server's public key
             System.out.println("sending encrypted file bytes");
@@ -161,6 +162,7 @@ public class Client {
             long endtime = System.currentTimeMillis();
             System.out.println("Estimated time taken: "+(endtime-starttime)+ " ms ("+estimatedTime(endtime-starttime)+")");
             System.out.println("Estimated throughput: " + 1.0*sentfile.length()/(endtime-starttime) + " b/ms");
+			String endAchieved = in.readLine();
 //            System.out.println("transfer complete");
 			echoSocket.close();
             in.close();
@@ -182,12 +184,20 @@ public class Client {
             return false;
         }
     }
+	
+	private static X509Certificate getCACert(String CAcertPath) throws Exception {
+        InputStream CAFileInputStream = new FileInputStream(CAcertPath);
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate CAcert = (X509Certificate) cf.generateCertificate(CAFileInputStream);
+        CAFileInputStream.close();
+		return CAcert;
+	}
 
     private static Key VerifyServer(BufferedReader in, ObjectInputStream ois, PrintWriter out, ObjectOutputStream oout)
     throws IOException, ClassNotFoundException{
+		
         // generation of random byte array
         byte[] randomByteArray = Crypto.randomByteGenerator(50);
-
         System.out.println("sending a random byte array");
         oout.writeObject(randomByteArray);
         oout.flush();
@@ -203,11 +213,8 @@ public class Client {
         // creation of X509Certificate object from CA.crt
         X509Certificate CAcert = null;
         try {
-            String currentdir = System.getProperty("user.dir")+File.separator;
-            InputStream CAFileInputStream = new FileInputStream(currentdir+"CA.crt");
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            CAcert = (X509Certificate) cf.generateCertificate(CAFileInputStream);
-            CAFileInputStream.close();
+			String currentdir = System.getProperty("user.dir")+File.separator;
+            CAcert = getCACert(currentdir+"CA.crt");
         } catch (Exception ce) {
             ce.printStackTrace();
             System.out.println("Failed to retrieve CA Certificate:"+ce.getMessage());
